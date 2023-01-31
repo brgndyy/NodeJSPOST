@@ -25,9 +25,12 @@ const { sequelize } = require("./models");
 //모델 불러오기
 const { User } = require("./models");
 
+// 회원가입과 로그인 처리 해주는 모듈
+const passport = require("passport");
+
 //라우터 불러오가
 const mainRouter = require("./routes/index.js");
-const writeRouter = require("./routes/write.js");
+const todoRouter = require("./routes/todo.js");
 const loginRouter = require("./routes/login.js");
 
 dotenv.config();
@@ -76,6 +79,8 @@ app.set("port", process.env.PORT || 3000);
 // html로 view engine 셋팅
 app.set("view engine", "html");
 
+//
+
 // 요청, 응답 기록 정보 남기기
 app.use(morgan("dev"));
 
@@ -90,6 +95,7 @@ app.use(express.json());
 // true라면 qs 모듈을 사용하여 쿼리스트링을 해석한다.(querystring 모듈을 좀 더 확장한것)
 app.use(express.urlencoded({ extended: false }));
 
+// 세션 생성
 app.use(
   session({
     resave: false, // 세션에 수정사항이 생기지 않더라도 세션을 다시 저장하겠는가?
@@ -104,9 +110,15 @@ app.use(
   })
 );
 
+app.use(passport.initialize()); //요청(req)에 passport 설정을 심고
+app.use(passport.session()); // req.sessiong 객체에 passport 정보를 저장한다.
+// passport 미들웨어 설정, session에서 생성된 req.session 객체에 passport 정보를 저장하는 것이므로
+// passport 미들웨어는 express-session 미들웨어보다 밑에 작성 되어야함.
+// passport.session()이 시행되면, 세션 쿠키 정보를 바탕으로 해서 deserializeUser()가 실행된다.
+
 //라우터 사용
 app.use("/", mainRouter);
-app.use("/write", writeRouter);
+app.use("/todo", todoRouter);
 app.use("/login", loginRouter);
 
 app.listen(app.get("port"), () => {
